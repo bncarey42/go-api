@@ -1,4 +1,4 @@
-module bres-rules
+module nuada-rules
 
 go 1.18
 
