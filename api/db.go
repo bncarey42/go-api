@@ -10,20 +10,20 @@ type MySQLStorage struct {
 	db *sql.DB
 }
 
-func NewMySQLStorage(cfg mysql.Config) *MySQLStorage {
+func NewMySQLStorage(cfg mysql.Config) (*MySQLStorage, error) {
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	log.Println("Connected to MySQL")
 
-	return &MySQLStorage{db: db}
+	return &MySQLStorage{db: db}, nil
 }
 
 func (s *MySQLStorage) Init() (*sql.DB, error) {
@@ -73,7 +73,7 @@ func (s *MySQLStorage) createTasksTable() error {
 }
 
 func (s *MySQLStorage) createUsersTable() error {
-	log.Println("creating users table")
+	log.Println("creating userss table")
 	_, err := s.db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 		    id int unsigned not null auto_increment,

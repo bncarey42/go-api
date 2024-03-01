@@ -17,8 +17,8 @@ func NewProjectService(store Store) *ProjectService {
 }
 
 func (s *ProjectService) RegisterRoutes(r *mux.Router) {
-	r.HandleFunc("/projects", s.handleCreateProject).Methods("POST")
-	r.HandleFunc("/projects/{id}", s.handleGetProject).Methods("GET")
+	r.HandleFunc("/projects", WithJWTAuth(s.handleCreateProject, s.store)).Methods("POST")
+	r.HandleFunc("/projects/{id}", WithJWTAuth(s.handleGetProject, s.store)).Methods("GET")
 }
 
 func (s *ProjectService) handleCreateProject(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +43,7 @@ func (s *ProjectService) handleCreateProject(w http.ResponseWriter, r *http.Requ
 
 	p, err := s.store.CreateProject(project)
 	if err != nil {
-		WriteJSON(w, http.StatusInternalServerError, ErrorResponse{Error: "Error creating task"})
+		WriteJSON(w, http.StatusInternalServerError, ErrorResponse{Error: "Error creating Project"})
 		return
 	}
 
@@ -58,6 +58,17 @@ func validateProjectPayload(project *Project) error {
 }
 
 func (s *ProjectService) handleGetProject(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Path
-	log.Println("PARAMS", params)
+	vars := mux.Vars(r)
+	id := vars["id"]
+	if id == "" {
+		WriteJSON(w, http.StatusBadRequest, ErrorResponse{Error: "id is Required"})
+		return
+	}
+
+	project, err := s.store.GetProject(id)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, ErrorResponse{Error: "Task not found"})
+		return
+	}
+	WriteJSON(w, http.StatusOK, project)
 }

@@ -35,3 +35,4 @@ type Project struct {
 var errNameRequired = errors.New("name is required")
 var errProjectIDRequired = errors.New("projectID is required")
 var errUserIDRequired = errors.New("userID is required")
+var errPasswordRequired = errors.New("password is required")

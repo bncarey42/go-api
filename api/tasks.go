@@ -17,12 +17,11 @@ func NewTaskService(store Store) *TaskService {
 }
 
 func (s *TaskService) RegisterRoutes(r *mux.Router) {
-	r.HandleFunc("/tasks", s.handleCreateTask).Methods("POST")
-	r.HandleFunc("/tasks/{id}", s.handleGetTask).Methods("GET")
+	r.HandleFunc("/tasks", WithJWTAuth(s.handleCreateTask, s.store)).Methods("POST")
+	r.HandleFunc("/tasks/{id}", WithJWTAuth(s.handleGetTask, s.store)).Methods("GET")
 }
 
 func (s *TaskService) handleCreateTask(w http.ResponseWriter, r *http.Request) {
-	log.Println("call /tasks", w, r)
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ErrorResponse{Error: "Invalid request Payload"})
@@ -33,15 +32,19 @@ func (s *TaskService) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 
 	var task *Task
 	err = json.Unmarshal(body, &task)
+
+	log.Println("TASK", task)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ErrorResponse{Error: "Invalid request Payload"})
 		return
 	}
+	log.Println("task unmarshaled")
 
 	if err := validateTaskPayload(task); err != nil {
 		WriteJSON(w, http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
 	}
+	log.Println("task is Valid")
 
 	t, err := s.store.CreateTask(task)
 	if err != nil {
